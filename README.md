@@ -29,8 +29,8 @@ A simple web application to track your daily expenses with monthly summaries and
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/expense-tracker.git
-   cd expense-tracker
+   git clone https://github.com/yourusername/Springboot-Learning.git
+   cd Springboot-Learning
    ```
 
 2. Build the application:
