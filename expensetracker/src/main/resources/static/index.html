@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Expense Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Expense Tracker</h1>
+
+<!-- Expense Form -->
+<form id="expenseForm">
+  <input type="text" id="title" placeholder="Title" required>
+  <input type="number" id="amount" placeholder="Amount" required>
+  <input type="text" id="category" placeholder="Category" required>
+  <input type="date" id="date" required>
+  <button type="submit">Add Expense</button>
+</form>
+
+<!-- Expenses List -->
+
+
+<h2>All Expenses</h2>
+<table id="expenseTable">
+  <thead>
+  <tr>
+    <th>Title</th>
+    <th>Amount</th>
+    <th>Category</th>
+    <th>Date</th>
+    <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<!-- Month Filter -->
+<div class="filter-container">
+  <label for="monthFilter">Filter by Month:</label>
+  <select id="monthFilter" onchange="filterByMonth()">
+    <option value="">All Months</option>
+    <!-- Months will be populated by JavaScript -->
+  </select>
+</div>
+
+<!-- Monthly Summary -->
+<div class="summary-container">
+  <h3>Monthly Summary</h3>
+  <div id="monthlySummary">
+    <!-- Summary will be populated by JavaScript -->
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
