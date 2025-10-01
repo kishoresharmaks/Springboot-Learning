@@ -1,33 +1,47 @@
 const apiUrl = "http://localhost:8081/api/expenses";
 const form = document.getElementById("expenseForm");
 const tableBody = document.querySelector("#expenseTable tbody");
-const monthlySummaryEl = document.getElementById("monthlySummary");
-const monthFilter = document.getElementById("monthFilter");
+const totalEl = document.getElementById("total");
+const monthwiseBody = document.querySelector("#monthwiseTable tbody");
 
 let expenses = [];
 let editingId = null;
 
 // Format helpers
-const formatDate = d => new Date(d).toLocaleDateString("en-US");
-const formatMonth = d => d.slice(0, 7);
+const formatDate = d => new Date(d).toLocaleDateString("en-GB"); // DD/MM/YYYY
+const formatMonth = m => {
+  const [year, month] = m.split("-");
+  return new Date(`${year}-${month}-01`).toLocaleDateString("en-US", { year: "numeric", month: "long" });
+};
 
-// Fetch expenses
+// Fetch all expenses
 async function fetchExpenses() {
   try {
     const res = await fetch(apiUrl);
     expenses = await res.json();
-    renderExpenses(expenses);
-    updateMonthFilter();
-    updateSummary();
+    renderExpenses();
+    updateTotal();
   } catch (err) {
-    console.error("Error fetching:", err);
+    console.error("Error fetching expenses:", err);
   }
 }
 
-// Render table
-function renderExpenses(data) {
-  tableBody.innerHTML = data.length
-    ? data.map(exp => `
+// Fetch monthwise summary
+async function fetchMonthwise() {
+  try {
+    const res = await fetch(`${apiUrl}/monthwise`);
+    const monthwise = await res.json();
+    renderMonthwise(monthwise);
+  } catch (err) {
+    console.error("Error fetching monthwise report:", err);
+  }
+}
+
+
+// Render expenses table
+function renderExpenses() {
+  tableBody.innerHTML = expenses.length
+    ? expenses.map(exp => `
       <tr>
         <td>${exp.title}</td>
         <td>₹${parseFloat(exp.amount).toFixed(2)}</td>
@@ -39,65 +53,68 @@ function renderExpenses(data) {
         </td>
       </tr>
     `).join("")
-    : `<tr><td colspan="5" style="text-align:center;">No expenses</td></tr>`;
+    : `<tr><td colspan="5" style="text-align:center;">No expenses yet</td></tr>`;
 }
-
-// Update dropdown months
-function updateMonthFilter() {
-  const months = [...new Set(expenses.map(e => formatMonth(e.date)))].sort().reverse();
-  monthFilter.innerHTML = `<option value="">All Months</option>` +
-    months.map(m => {
-      const d = new Date(m + "-01");
-      return `<option value="${m}">${d.toLocaleDateString("en-US", { year:"numeric", month:"long" })}</option>`;
-    }).join("");
-}
-
-// Update summary
-function updateSummary(selectedMonth = '') {
-  const filtered = selectedMonth
-    ? expenses.filter(e => formatMonth(e.date) === selectedMonth)
-    : expenses;
-
-  if (!filtered.length) {
-    monthlySummaryEl.innerHTML = "<p>No data available</p>";
+function renderMonthwise(data) {
+  if (!data.length) {
+    monthwiseBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No data available</td></tr>`;
     return;
   }
 
-  const total = filtered.reduce((sum, e) => sum + parseFloat(e.amount), 0);
-  const avg = filtered.length ? (total / filtered.length) : 0;
+  // Group expenses by month
+  const monthTotals = {};
+  data.forEach(exp => {
+    const month = exp.date.slice(0, 7); // yyyy-MM
+    monthTotals[month] = (monthTotals[month] || 0) + parseFloat(exp.amount);
+  });
 
-  monthlySummaryEl.innerHTML = `
-    <p><b>${selectedMonth ? 'Monthly' : 'All-Time'} Summary</b></p>
-    <p><b>Total:</b> ₹${total.toFixed(2)}</p>
-    <p><b>Count:</b> ${filtered.length}</p>
-    <p><b>Average:</b> ₹${avg.toFixed(2)}</p>
-  `;
+  // Render rows
+  monthwiseBody.innerHTML = Object.entries(monthTotals)
+    .map(([month, total]) => `
+      <tr>
+        <td>${formatMonth(month)}</td>
+        <td>₹${total.toFixed(2)}</td>
+      </tr>
+    `).join("");
 }
 
-// Filter by month
-function filterByMonth() {
-  const m = monthFilter.value;
-  renderExpenses(m ? expenses.filter(e => formatMonth(e.date) === m) : expenses);
-  updateSummary(m || new Date().toISOString().slice(0,7));
+
+// Update total expense
+function updateTotal() {
+  const total = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+  totalEl.textContent = `₹${total.toFixed(2)}`;
 }
 
 // Add / Update expense
 form.onsubmit = async e => {
   e.preventDefault();
+
   const exp = {
     title: document.getElementById("title").value,
     amount: parseFloat(document.getElementById("amount").value),
     category: document.getElementById("category").value,
     date: document.getElementById("date").value
   };
+
   const url = editingId ? `${apiUrl}/${editingId}` : apiUrl;
   const method = editingId ? "PUT" : "POST";
 
-  await fetch(url, { method, headers: {"Content-Type":"application/json"}, body: JSON.stringify(exp) });
-  editingId = null;
-  form.reset();
-  document.getElementById("date").value = new Date().toISOString().split("T")[0];
-  fetchExpenses();
+  try {
+    await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(exp)
+    });
+
+    editingId = null;
+    form.querySelector("button").textContent = "Add Expense";
+    form.reset();
+    document.getElementById("date").value = new Date().toISOString().split("T")[0];
+    fetchExpenses();
+    fetchMonthwise();
+  } catch (err) {
+    console.error("Error saving expense:", err);
+  }
 };
 
 // Edit expense
@@ -113,12 +130,18 @@ function editExpense(id) {
 
 // Delete expense
 async function deleteExpense(id) {
-  await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
-  fetchExpenses();
+  try {
+    await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+    fetchExpenses();
+    fetchMonthwise();
+  } catch (err) {
+    console.error("Error deleting expense:", err);
+  }
 }
 
 // Init
 window.onload = () => {
   document.getElementById("date").value = new Date().toISOString().split("T")[0];
   fetchExpenses();
+  fetchMonthwise();
 };

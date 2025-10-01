@@ -17,38 +17,36 @@
   <button type="submit">Add Expense</button>
 </form>
 
-<!-- Expenses List -->
-
-
+<!-- Expense Table -->
 <h2>All Expenses</h2>
-<table id="expenseTable">
+<table border="1" id="expenseTable">
   <thead>
   <tr>
     <th>Title</th>
     <th>Amount</th>
     <th>Category</th>
     <th>Date</th>
-    <th>Actions</th>
+    <th>Action</th>
   </tr>
   </thead>
   <tbody></tbody>
 </table>
-<!-- Month Filter -->
-<div class="filter-container">
-  <label for="monthFilter">Filter by Month:</label>
-  <select id="monthFilter" onchange="filterByMonth()">
-    <option value="">All Months</option>
-    <!-- Months will be populated by JavaScript -->
-  </select>
-</div>
 
-<!-- Monthly Summary -->
-<div class="summary-container">
-  <h3>Monthly Summary</h3>
-  <div id="monthlySummary">
-    <!-- Summary will be populated by JavaScript -->
-  </div>
-</div>
+<!-- Total Expense -->
+<h3>Total Expense: <span id="total">₹0</span></h3>
+
+<!-- Monthly Report -->
+<h2>Monthly Report</h2>
+<table border="1" id="monthwiseTable">
+  <thead>
+  <tr>
+    <th>Month</th>
+    <th>Total Expense</th>
+  </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
 <script src="app.js"></script>
 </body>
 </html>

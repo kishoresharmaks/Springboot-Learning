@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/expenses")
-@CrossOrigin(origins = "#") // for frontend later
+@CrossOrigin(origins = "#")
 public class ExpenseController {
 
     private final ExpenseService service;
@@ -40,5 +40,11 @@ public class ExpenseController {
     @DeleteMapping("/{id}")
     public void deleteExpense(@PathVariable Long id) {
         service.deleteExpense(id);
+    }
+
+    @GetMapping("/monthwise")
+    public List<Expense> getMonthWise()
+    {
+        return service.getMonthwise();
     }
 }
